@@ -8,15 +8,18 @@
         {{ group.description }}
     </p>
 
-	{% for post in posts %}
-    <h3>
-        Автор: {{ post.author.get_full_name }}, дата публикации: {{ post.pub_date|date:"d M Y" }}
-    </h3>
-    <p>{{ post.text|linebreaksbr }}</p>
+	{% for post in page %}
 
-	{% if not forloop.last %}
-		<hr>
-	{% endif %}
+        {% include "post_representation.html" with comment_button_able=True %}
+
+	    {% if not forloop.last %}
+		    <hr>
+	    {% endif %}
 
 	{% endfor %}
+
+    {% if page.has_other_pages %}
+        {% include "paginator.html" with items=page paginator=paginator %}
+    {% endif %}
+
 {% endblock %}
