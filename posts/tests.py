@@ -1,7 +1,6 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
-from django.core import mail
 from posts.models import Post, Group
 
 
@@ -158,3 +157,11 @@ class TestPosts(TestCase):
         # пользователь не может редактировать чужие посты - он перенаправляется на страницу просмотра поста
         response = self.client.get(post_edit_url)
         self.assertRedirects(response, post_view_url)
+
+    def testError404(self):
+        """Тестирует поведение при обращении к странице несуществующего поста."""
+        Post.objects.all().delete()
+
+        response = self.client.get(reverse('post', args=[self.author.username, 1]))
+        self.assertEqual(response.status_code, 404)
+        self.assertTemplateUsed(response, 'misc/404.html')
