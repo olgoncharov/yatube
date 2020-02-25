@@ -88,7 +88,7 @@ def post_edit(request, username, post_id):
             post.delete()
             return redirect('profile', username=username)
 
-        form = PostForm(request.POST, instance=post)
+        form = PostForm(request.POST, files=request.FILES or None, instance=post)
         if form.is_valid():
             # сохраняем пост и перенаправляем на страницу просмотра поста
             form.save()
