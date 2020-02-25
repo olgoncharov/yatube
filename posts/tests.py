@@ -2,6 +2,9 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from posts.models import Post, Group
+from io import BytesIO
+from PIL import Image
+from django.core.files.uploadedfile import SimpleUploadedFile
 
 
 User = get_user_model()
@@ -43,6 +46,15 @@ class TestPosts(TestCase):
             title='Русские богатыри',
             slug='russian_heroes'
         )
+
+        # графический файл
+        data = BytesIO()
+        Image.new('RGB', (100, 100)).save(data, 'PNG')
+        data.seek(0)
+        self.image_file = SimpleUploadedFile('image.png', data.getvalue())
+
+        # неграфический файл
+        self.non_image_file = SimpleUploadedFile('non_image.txt', b'some text')
 
     def testCreation(self):
         """Тестирует поведение при создании нового поста."""
@@ -104,12 +116,7 @@ class TestPosts(TestCase):
 
     def testEdit(self):
         """Тестирует поведение при редактировании существующего поста."""
-
-        posts = Post.objects.filter(author=self.author, text=self.post_text, group=self.group)
-        if not posts.count():
-            test_post = Post.objects.create(author=self.author, text=self.post_text, group=self.group)
-        else:
-            test_post = posts[0]
+        test_post, created = Post.objects.get_or_create(author=self.author, text=self.post_text, group=self.group)
         post_edit_url = reverse('post_edit', args=[self.author.username, test_post.pk])
         post_view_url = reverse('post', args=[self.author.username, test_post.pk])
 
@@ -165,3 +172,40 @@ class TestPosts(TestCase):
         response = self.client.get(reverse('post', args=[self.author.username, 1]))
         self.assertEqual(response.status_code, 404)
         self.assertTemplateUsed(response, 'misc/404.html')
+
+    def testImages(self):
+        """Тестирует работу с иллюстрациями к постам."""
+        Post.objects.all().delete()
+        self.client.force_login(self.author)
+
+        response = self.client.post(reverse('new_post'), {
+            'text': self.post_text,
+            'group': self.group.pk,
+            'image': self.image_file,
+        })
+
+        # убеждаемся, что пост появился в базе данных
+        self.assertEqual(Post.objects.count(), 1)
+
+        test_post = Post.objects.get()
+
+        # Все страницы, на которых содержится пост должны иметь тег <img>
+        url_list = [
+            reverse('index'),
+            reverse('profile', args=[self.author.username]),
+            reverse('post', args=[self.author.username, test_post.pk]),
+            reverse('group-posts', args=[self.group.slug]),
+        ]
+        for url in url_list:
+            response = self.client.get(url)
+            self.assertContains(response, '<img')
+
+        # пробуем создать пост с неграфическим файлом
+        response = self.client.post(reverse('new_post'), {
+            'text': self.post_text,
+            'group': self.group.pk,
+            'image': self.non_image_file,
+        })
+
+        self.assertFormError(response, 'form', 'image', 'Загрузите правильное изображение. Файл, который вы загрузили, '
+                                                        'поврежден или не является изображением.')

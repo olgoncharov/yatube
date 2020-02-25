@@ -38,7 +38,7 @@ def group_posts(request, slug):
 def new_post(request):
     """Страница создания нового поста."""
     if request.method == 'POST':
-        form = PostForm(request.POST)
+        form = PostForm(request.POST, files=request.FILES or None)
         if form.is_valid():
             post = Post.objects.create(author=request.user, **form.cleaned_data)
             return redirect('index')
