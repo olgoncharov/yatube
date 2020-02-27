@@ -5,6 +5,8 @@ from posts.models import Post, Group
 from io import BytesIO
 from PIL import Image
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.cache import cache
+from django.core.cache.backends import locmem
 
 
 User = get_user_model()
@@ -82,6 +84,7 @@ class TestPosts(TestCase):
         self.assertRedirects(response, reverse('index'))
 
         # после создания пост появляется на главной странице сайта, на странице сообщества и на странице профиля
+        cache.clear()
         url_list = [
             reverse('index'),
             reverse('profile', args=[self.author.username]),
@@ -139,6 +142,7 @@ class TestPosts(TestCase):
         self.assertIsNone(test_post.group)
 
         # текст поста изменился на главной странице и странице профиля
+        cache.clear()
         url_list = [
             reverse('index'),
             reverse('profile', args=[self.author.username]),
@@ -190,6 +194,7 @@ class TestPosts(TestCase):
         test_post = Post.objects.get()
 
         # Все страницы, на которых содержится пост должны иметь тег <img>
+        cache.clear()
         url_list = [
             reverse('index'),
             reverse('profile', args=[self.author.username]),
@@ -209,3 +214,42 @@ class TestPosts(TestCase):
 
         self.assertFormError(response, 'form', 'image', 'Загрузите правильное изображение. Файл, который вы загрузили, '
                                                         'поврежден или не является изображением.')
+
+
+class TestCache(TestCase):
+    """Набор тестов для проверки работы кэша."""
+
+    def setUp(self):
+        self.client = Client()
+        Post.objects.all().delete()
+
+        self.author, created = User.objects.get_or_create(
+            username='alesha_popovich',
+            first_name='Алёша',
+            last_name='Попович',
+            email='alex@popov.ru'
+        )
+
+        self.old_post = Post.objects.create(author=self.author, text='old post')
+        self.new_post_text = 'another one post'
+
+        self.index_url = reverse('index')
+
+    def testIndex(self):
+        """Тестирует кэширование главной страницы."""
+        response = self.client.get(self.index_url)
+
+        # сейчас на главной странице один пост
+        # создаем еще один пост и снова запрашиваем главную страницу
+        new_post = Post.objects.create(author=self.author, text=self.new_post_text)
+        response = self.client.get(self.index_url)
+
+        # на главной странице пост еще не появился, т.к. кэш возвращает старую версию страницы
+        self.assertNotContains(response, self.new_post_text)
+
+        # очищаем кэш и опять запрашиваем главную страницу
+        cache.clear()
+        response = self.client.get(self.index_url)
+
+        # теперь новый пост есть на странице
+        self.assertContains(response, self.new_post_text)
