@@ -3,8 +3,7 @@
 {% for item in comments %}
 <div class="card">
   <div class="card-body">
-    <h5 class="card-title"><a href="{% url 'profile' item.author.username %}" name="comment_{{ item.id }}">{{
-      item.author.username }}</a></h5>
+    <h5 class="card-title"><a href="{% url 'profile' item.author.username %}" name="comment_{{ item.id }}">{{ item.author.username }}</a></h5>
     <h6 class="card-subtitle mb-2 text-muted">{{ item.created }}</h6>
     <p class="card-text">{{ item.text|linebreaksbr }}</p>
   </div>
