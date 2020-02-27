@@ -1,11 +1,13 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse
 from django.db.models import Count
-from .models import Post, Group
-from .forms import PostForm
-from django.http import HttpResponse
+from .models import Post, Group, Comment
+from .forms import PostForm, CommentForm
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.contrib.auth import get_user_model
+from django.views.generic import CreateView
+
 
 User = get_user_model()
 
@@ -66,10 +68,14 @@ def post_view(request, username, post_id):
     """Страница просмотра поста."""
     author = get_user_profile(username)
     post = get_object_or_404(Post, pk=post_id)
+    comments = post.comments.order_by('created').all()
+    new_comment_form = CommentForm()
 
     return render(request, 'post.html', {
         'author': author,
         'post': post,
+        'comments': comments,
+        'new_comment_form': new_comment_form,
     })
 
 
@@ -101,6 +107,19 @@ def post_edit(request, username, post_id):
         'post': post,
         'form': PostForm(instance=post)
     })
+
+
+class AddComment(CreateView):
+    http_method_names = ['post']
+    form_class = CommentForm
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        form.instance.post = Post.objects.get(pk=self.kwargs['post_id'])
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('post', kwargs=self.kwargs)
 
 
 def page_not_found(request, exception):

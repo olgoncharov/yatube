@@ -6,13 +6,13 @@
 
 <main role="main" class="container">
     <div class="row">
-
         {% include "profile_statistics.html" %}
-
         <div class="col-md-9">
             {% include "post_representation.html" with comment_button_able=False %}
+            <br><br>
+            <h1>Комментарии</h1>
+            {% include "comments.html" %}
         </div>
-
     </div>
 </main>
 
