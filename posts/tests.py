@@ -6,7 +6,6 @@ from io import BytesIO
 from PIL import Image
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.cache import cache
-from django.core.cache.backends import locmem
 
 
 User = get_user_model()
@@ -168,6 +167,33 @@ class TestPosts(TestCase):
         # пользователь не может редактировать чужие посты - он перенаправляется на страницу просмотра поста
         response = self.client.get(post_edit_url)
         self.assertRedirects(response, post_view_url)
+
+    def testDelete(self):
+        """Тестирует поведение при удалении поста."""
+        test_post, created = Post.objects.get_or_create(author=self.author, text=self.post_text, group=self.group)
+        delete_url = reverse('post_delete', args=[self.author.username, test_post.pk])
+
+        # пользователь не может удалить пост, автором которго он не является
+        self.client.force_login(self.not_author)
+        response = self.client.post(delete_url)
+
+        # он перенаправляется на страницу просмотра поста
+        expected_url = reverse('post', args=[self.author.username, test_post.pk])
+        self.assertRedirects(response, expected_url)
+
+        # пост при этом из базы не удаляется
+        self.assertEqual(Post.objects.count(), 1)
+
+        # автор поста может удалить свой пост
+        self.client.force_login(self.author)
+        response = self.client.post(delete_url)
+
+        # пост из базы данных исчез
+        self.assertEqual(Post.objects.count(), 0)
+
+        # и пользователь перешел на страницу своего профиля
+        expected_url = reverse('profile', args=[self.author.username])
+        self.assertRedirects(response, expected_url)
 
     def testError404(self):
         """Тестирует поведение при обращении к странице несуществующего поста."""
