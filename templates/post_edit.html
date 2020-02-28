@@ -31,7 +31,7 @@
           <button type="submit" name="button" value="Create" class="btn btn-primary">Добавить</button>
           {% else %}
           <button type="submit" name="button" value="Update" class="btn btn-primary">Сохранить</button>
-          <button type="submit" name="button" value="Delete" class="btn btn-danger">Удалить</button>
+          <button type="submit" formaction="{% url 'post_delete' user.username form.instance.pk %}"  class="btn btn-danger">Удалить</button>
           {% endif %}
         </form>
       </div> <!-- card body -->

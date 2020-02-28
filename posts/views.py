@@ -1,13 +1,14 @@
-from django.shortcuts import render, get_object_or_404, redirect
-from django.urls import reverse
-from django.db.models import Count
-from .models import Post, Group, Comment
-from .forms import PostForm, CommentForm
-from django.contrib.auth.decorators import login_required
-from django.core.paginator import Paginator
 from django.contrib.auth import get_user_model
-from django.views.generic import CreateView
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.paginator import Paginator
+from django.db.models import Count
+from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse, reverse_lazy
+from django.views.generic import CreateView, UpdateView, DeleteView
+
+from .forms import PostForm, CommentForm
+from .models import Post, Group
 
 User = get_user_model()
 
@@ -36,18 +37,49 @@ def group_posts(request, slug):
     })
 
 
-@login_required
-def new_post(request):
+class PostCreate(LoginRequiredMixin, CreateView):
     """Страница создания нового поста."""
-    if request.method == 'POST':
-        form = PostForm(request.POST, files=request.FILES or None)
-        if form.is_valid():
-            post = Post.objects.create(author=request.user, **form.cleaned_data)
-            return redirect('index')
-        return render(request, 'post_edit.html', {'form': form})
+    form_class = PostForm
+    template_name = 'post_edit.html'
+    success_url = reverse_lazy('index')
 
-    form = PostForm()
-    return render(request, 'post_edit.html', {'form': form})
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        return super().form_valid(form)
+
+
+class PostUpdate(LoginRequiredMixin, UpdateView):
+    """Страница редактирования поста."""
+    model = Post
+    pk_url_kwarg = 'post_id'
+    form_class = PostForm
+    template_name = 'post_edit.html'
+
+    def get(self, request, *args, **kwargs):
+        post = self.get_object()
+        if post.author != request.user:
+            # если пользователь пытается редактировать чужой пост - перенаправляем его на страницу просмотра поста
+            return redirect('post', **kwargs)
+        return super().get(request, *args, **kwargs)
+
+    def get_success_url(self):
+        return reverse_lazy('post', kwargs=self.kwargs)
+
+
+class PostDelete(LoginRequiredMixin, DeleteView):
+    """Контроллер удаления поста."""
+    model = Post
+    pk_url_kwarg = 'post_id'
+    http_method_names = ['post',]
+
+    def delete(self, request, *args, **kwargs):
+        post = self.get_object()
+        if request.user != post.author:
+            return redirect('post', **kwargs)
+        return super().delete(request, *args, **kwargs)
+
+    def get_success_url(self):
+        return reverse_lazy('profile', args=[self.kwargs['username']])
 
 
 def profile(request, username):
@@ -76,36 +108,6 @@ def post_view(request, username, post_id):
         'post': post,
         'comments': comments,
         'new_comment_form': new_comment_form,
-    })
-
-
-@login_required
-def post_edit(request, username, post_id):
-    """Страница редактирования поста."""
-    post = get_object_or_404(Post, pk=post_id)
-
-    if post.author != request.user:
-        # если пользователь пытается редактировать чужой пост - перенаправляем его на страницу просмотра поста
-        return redirect('post', username=username, post_id=post_id)
-
-    if request.method == 'POST':
-        if 'button' in request.POST and request.POST['button'] == 'Delete':
-            # удаляем пост и перенаправляем на страницу профиля
-            post.delete()
-            return redirect('profile', username=username)
-
-        form = PostForm(request.POST, files=request.FILES or None, instance=post)
-        if form.is_valid():
-            # сохраняем пост и перенаправляем на страницу просмотра поста
-            form.save()
-            return redirect('post', username=username, post_id=post_id)
-
-        # оставляем пользователя на странице, если он ввел невалидные данные и пытается сохранить изменения
-        return render(request, 'post_edit.html', {'form': form})
-
-    return render(request, 'post_edit.html', {
-        'post': post,
-        'form': PostForm(instance=post)
     })
 
 
