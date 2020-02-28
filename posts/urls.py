@@ -4,10 +4,10 @@ from . import views
 urlpatterns = [
     path('new/', views.PostCreate.as_view(), name='new_post'),
     path('group/<slug:slug>/', views.GroupView.as_view(), name='group-posts'),
-    path('', views.index, name='index'),
-    path('<username>/', views.profile, name='profile'),
-    path('<username>/<int:post_id>/', views.post_view, name='post'),
+    path('', views.IndexView.as_view(), name='index'),
+    path('<username>/', views.ProfileView.as_view(), name='profile'),
+    path('<username>/<int:post_id>/', views.PostView.as_view(), name='post'),
     path('<username>/<int:post_id>/edit/', views.PostUpdate.as_view(), name='post_edit'),
     path('<username>/<int:post_id>/delete/', views.PostDelete.as_view(), name='post_delete'),
-    path('<username>/<int:post_id>/comment/', views.AddComment.as_view(), name='add_comment')
+    path('<username>/<int:post_id>/comment/', views.CommentCreate.as_view(), name='add_comment')
 ]

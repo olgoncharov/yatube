@@ -6,21 +6,36 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, UpdateView, DeleteView
 from django.views.generic.base import TemplateView
+from django.views.generic.list import ListView
 
 from .forms import PostForm, CommentForm
 from .models import Post, Group
 
+
 User = get_user_model()
 
 
-def index(request):
-    """Главная страница сойта."""
-    post_list = Post.objects.order_by('-pub_date').all()
-    paginator = Paginator(post_list, 10)
+class IndexView(ListView):
+    """Главная страница сайта."""
+    model = Post
+    ordering = '-pub_date'
+    paginate_by = 10
+    template_name = 'index.html'
 
-    page_number = request.GET.get('page')
-    page = paginator.get_page(page_number)
-    return render(request, 'index.html', {'page': page, 'paginator': paginator})
+
+class GroupView(ListView):
+    """Страница сообщества с постами."""
+    template_name = 'group.html'
+    paginate_by = 10
+
+    def get_queryset(self):
+        group = get_object_or_404(Group, slug=self.kwargs['slug'])
+        return group.posts.order_by('-pub_date').all()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['group'] = get_object_or_404(Group, slug=self.kwargs['slug'])
+        return context
 
 
 class PostCreate(LoginRequiredMixin, CreateView):
@@ -68,53 +83,44 @@ class PostDelete(LoginRequiredMixin, DeleteView):
         return reverse_lazy('profile', args=[self.kwargs['username']])
 
 
-class GroupView(TemplateView):
-    """Страница сообщества с постами."""
-    template_name = 'group.html'
+class ProfileView(ListView):
+    """Страница профиля пользователя."""
+    template_name = 'profile.html'
+    paginate_by = 5
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        group = get_object_or_404(Group, slug=kwargs['slug'])
-        paginator = Paginator(group.posts.all().order_by('-pub_date'), 10)
-        page_number = kwargs.get('page')
-        page = paginator.get_page(page_number)
-        context['group'] = group
-        context['page'] = page
-        context['paginator'] = paginator
+    def get_queryset(self):
+        author = get_user_profile(self.kwargs['username'])
+        self.kwargs['author'] = author
+
+        return author.posts.all()
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(object_list=object_list, **kwargs)
+        context['author'] = self.kwargs['author']
 
         return context
 
 
-def profile(request, username):
-    """Страница профиля пользователя."""
-    author = get_user_profile(username)
-    paginator = Paginator(author.posts.all(), 5)
-    page_number = request.GET.get('page')
-    page = paginator.get_page(page_number)
-
-    return render(request, 'profile.html', {
-        'author': author,
-        'page': page,
-        'paginator': paginator,
-    })
-
-
-def post_view(request, username, post_id):
+class PostView(TemplateView):
     """Страница просмотра поста."""
-    author = get_user_profile(username)
-    post = get_object_or_404(Post, pk=post_id)
-    comments = post.comments.order_by('created').all()
-    new_comment_form = CommentForm()
+    template_name = 'post.html'
 
-    return render(request, 'post.html', {
-        'author': author,
-        'post': post,
-        'comments': comments,
-        'new_comment_form': new_comment_form,
-    })
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        author = get_user_profile(self.kwargs['username'])
+        post = get_object_or_404(Post, pk=self.kwargs['post_id'])
+        comments = post.comments.order_by('created').all()
+        new_comment_form = CommentForm()
+
+        context['author'] = author
+        context['post'] = post
+        context['comments'] = comments
+        context['new_comment_form'] = new_comment_form
+
+        return context
 
 
-class AddComment(CreateView, LoginRequiredMixin):
+class CommentCreate(LoginRequiredMixin, CreateView):
     http_method_names = ['post']
     form_class = CommentForm
 

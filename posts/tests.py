@@ -91,9 +91,9 @@ class TestPosts(TestCase):
         ]
         for url in url_list:
             response = self.client.get(url)
-            self.assertIn('page', response.context)
-            self.assertEqual(len(response.context['page']), 1)
-            self.assertEqual(response.context['page'][0], posts[0])
+            self.assertIn('page_obj', response.context)
+            self.assertEqual(len(response.context['page_obj']), 1)
+            self.assertEqual(response.context['page_obj'][0], posts[0])
             self.assertContains(response, self.post_text)
 
         # убедимся, что и на странице просмотра поста он содержится
@@ -152,7 +152,7 @@ class TestPosts(TestCase):
 
         # а со страницы сообщества пост исчез
         response = self.client.get(reverse('group-posts', args=[self.group.slug]))
-        self.assertEqual(len(response.context['page']), 0)
+        self.assertEqual(len(response.context['page_obj']), 0)
         self.assertNotContains(response, self.post_text_update)
 
         self.client.logout()

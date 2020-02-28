@@ -3,11 +3,10 @@
 {% block content %}
 <h1>{{ group.title }}</h1>
 <p>{{ group.description }}</p>
-{% for post in page %}
+{% for post in page_obj %}
 {% include "post_item.html" with comment_button_able=True %}
-{% if not forloop.last %}<hr>{% endif %}
 {% endfor %}
-{% if page.has_other_pages %}
-{% include "paginator.html" with items=page paginator=paginator %}
+{% if page_obj.has_other_pages %}
+{% include "paginator.html" with items=page_obj paginator=paginator %}
 {% endif %}
 {% endblock %}
