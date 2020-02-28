@@ -3,7 +3,7 @@ from . import views
 
 urlpatterns = [
     path('new/', views.PostCreate.as_view(), name='new_post'),
-    path('group/<slug:slug>/', views.group_posts, name='group-posts'),
+    path('group/<slug:slug>/', views.GroupView.as_view(), name='group-posts'),
     path('', views.index, name='index'),
     path('<username>/', views.profile, name='profile'),
     path('<username>/<int:post_id>/', views.post_view, name='post'),

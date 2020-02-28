@@ -1,11 +1,11 @@
 from django.contrib.auth import get_user_model
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
 from django.db.models import Count
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, UpdateView, DeleteView
+from django.views.generic.base import TemplateView
 
 from .forms import PostForm, CommentForm
 from .models import Post, Group
@@ -21,20 +21,6 @@ def index(request):
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
     return render(request, 'index.html', {'page': page, 'paginator': paginator})
-
-
-def group_posts(request, slug):
-    """Страница сообщества с постами."""
-    group = get_object_or_404(Group, slug=slug)
-    paginator = Paginator(group.posts.all().order_by('-pub_date'), 10)
-    page_number = request.GET.get('page')
-    page = paginator.get_page(page_number)
-
-    return render(request, 'group.html', {
-        'group': group,
-        'page': page,
-        'paginator': paginator,
-    })
 
 
 class PostCreate(LoginRequiredMixin, CreateView):
@@ -80,6 +66,23 @@ class PostDelete(LoginRequiredMixin, DeleteView):
 
     def get_success_url(self):
         return reverse_lazy('profile', args=[self.kwargs['username']])
+
+
+class GroupView(TemplateView):
+    """Страница сообщества с постами."""
+    template_name = 'group.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        group = get_object_or_404(Group, slug=kwargs['slug'])
+        paginator = Paginator(group.posts.all().order_by('-pub_date'), 10)
+        page_number = kwargs.get('page')
+        page = paginator.get_page(page_number)
+        context['group'] = group
+        context['page'] = page
+        context['paginator'] = paginator
+
+        return context
 
 
 def profile(request, username):
