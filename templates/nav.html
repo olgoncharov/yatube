@@ -1,14 +1,21 @@
 <nav class="navbar navbar-light" style="background-color: #e3f2fd;">
   <a class="navbar-brand" href="/"><span style="color:red">Ya</span>tube</a>
-  <nav class="my-2 my-md-0 mr-md-3">
+  <ul class="nav justify-content-end">
     {% if user.is_authenticated %}
-    Пользователь: {{ user.username }}.
-    <a class="p-2 text-dark" href="{% url 'password_change' %}">Изменить пароль</a>
-    <a class="p-2 text-dark" href="{% url 'logout' %}">Выйти</a>
-    <a class="p-2 text-dark" href="{% url 'new_post' %}">Новая запись</a>
+    <li class="nav-item dropdown">
+      <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Пользователь: {{ user.username }}</a>
+      <div class="dropdown-menu">
+        <a class="dropdown-item" href="{% url 'password_change' %}">Изменить пароль</a>
+        <a class="dropdown-item" href="{% url 'logout' %}">Выйти</a>
+      </div>
+    </li>
     {% else %}
-    <a class="p-2 text-dark" href="{% url 'login' %}">Войти</a> |
-    <a class="p-2 text-dark" href="{% url 'signup' %}">Регистрация</a>
+    <li class="nav-item">
+      <a href="{% url 'login' %}" class="btn btn-outline-primary btn-sm" role="button" aria-pressed="true">Войти</a>
+    </li>
+    <li class="nav-item ml-2">
+      <a href="{% url 'signup' %}" class="btn btn-outline-secondary btn-sm" role="button" aria-pressed="true">Регистрация</a>
+    </li>
     {% endif %}
-  </nav>
+  </ul>
 </nav>
