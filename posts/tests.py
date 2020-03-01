@@ -1,7 +1,7 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
-from posts.models import Post, Group, Follow
+from posts.models import Post, Group, Follow, Comment
 from io import BytesIO
 from PIL import Image
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -281,6 +281,40 @@ class TestCache(TestCase):
 
         # теперь новый пост есть на странице
         self.assertContains(response, self.new_post_text)
+
+
+class TestComments(TestCase):
+    """Набор тестов для проверки работы комментариев."""
+
+    def setUp(self):
+        self.author = User.objects.create(username='somebody')
+        self.user = User.objects.create(username='another_one')
+        self.post = Post.objects.create(author=self.author, text='spartak - champion')
+        self.comment_text = 'it is not true'
+        self.url_add_comment = reverse('add_comment', args=[self.author.username, self.post.pk])
+        self.client = Client()
+
+    def testCreate(self):
+        """Тестирует создание комментариев к посту."""
+
+        # авторизованный пользователь может добавлять комментарии к посту
+        self.client.force_login(self.user)
+        response = self.client.post(self.url_add_comment, {'text': self.comment_text})
+
+        # после создания перенаправление на страницу поста
+        expected_url = reverse('post', args=[self.author.username, self.post.pk])
+        self.assertRedirects(response, expected_url)
+
+        # и в базе данных появился объект Comment
+        self.assertTrue(Comment.objects.filter(post=self.post, author=self.user, text=self.comment_text).exists())
+
+        # неавторизованный пользователь не может оставлять комментарии
+        self.client.logout()
+        response = self.client.post(self.url_add_comment, {'text': self.comment_text})
+
+        # он перенаправляется на страницу авторизации
+        expected_url = f'{reverse("login")}?next={self.url_add_comment}'
+        self.assertRedirects(response, expected_url)
 
 
 class TestFollows(TestCase):
