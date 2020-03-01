@@ -105,9 +105,8 @@ class ProfileView(ListView):
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(object_list=object_list, **kwargs)
-        follows = Follow.objects.filter(user=self.request.user, author=self.kwargs['author'])
         context['author'] = self.kwargs['author']
-        context['following'] = (follows.count() > 0)
+        context['following'] = check_following(self.request.user, context['author'])
 
         return context
 
@@ -122,10 +121,9 @@ class PostView(TemplateView):
         post = get_object_or_404(Post, pk=self.kwargs['post_id'])
         comments = post.comments.order_by('created').all()
         new_comment_form = CommentForm()
-        follows = Follow.objects.filter(user=self.request.user, author=author)
 
         context['author'] = author
-        context['following'] = follows.count()
+        context['following'] = context['following'] = check_following(self.request.user, context['author'])
         context['post'] = post
         context['comments'] = comments
         context['new_comment_form'] = new_comment_form
@@ -176,3 +174,10 @@ def get_user_profile(username):
     return get_object_or_404(
         User.objects.annotate(count_of_posts=Count('posts')),
         username=username)
+
+
+def check_following(user, author):
+    """Функция проверяет, подписан ли пользователь на автора."""
+    if user.is_authenticated:
+        return Follow.objects.filter(user=user, author=author).count() > 0
+    return False
