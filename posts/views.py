@@ -172,7 +172,11 @@ def server_error(request):
 
 def get_user_profile(username):
     return get_object_or_404(
-        User.objects.annotate(count_of_posts=Count('posts')),
+        User.objects.annotate(
+            count_of_posts=Count('posts', distinct=True),
+            count_of_followers=Count('followers', distinct=True),
+            count_of_followings=Count('followings', distinct=True)
+        ),
         username=username)
 
 
