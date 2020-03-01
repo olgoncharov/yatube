@@ -1,11 +1,13 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
-from posts.models import Post, Group
+from posts.models import Post, Group, Follow
 from io import BytesIO
 from PIL import Image
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.cache import cache
+import random
+import string
 
 
 User = get_user_model()
@@ -279,3 +281,117 @@ class TestCache(TestCase):
 
         # теперь новый пост есть на странице
         self.assertContains(response, self.new_post_text)
+
+
+class TestFollows(TestCase):
+    """Набор тестов для проверки работы системы подписок."""
+
+    def setUp(self):
+        """
+        Подготавливает данные для работы тестов и сохраняет их в следующих атрибутах:
+            data: list, список кортежей с тремя элементами:
+                [0] - пользователь
+                [1] - список постов пользователя
+                [2] - список подписчиков пользователя
+            non_following: list, список пользователей, которые не подписаны ни на одного автора
+        """
+        self.data = []
+        for i in range(3):
+            author = User.objects.create(username=f'author{i}')
+            posts, followers = [], []
+
+            for j in range(3):
+                # создаем пост со случайно сгенерированным текстом
+                random_text = ''.join(random.choice(string.ascii_letters) for ch in range(50))
+                posts.append(Post.objects.create(author=author, text=random_text))
+
+            for j in range(5):
+                follower = User.objects.create(username=f'follower{i}_{j}')
+                follow = Follow.objects.create(user=follower, author=author)
+                followers.append(follower)
+
+            self.data.append((author, posts, followers))
+
+        self.non_following = []
+        for i in range(3):
+            self.non_following.append(User.objects.create(username=f'non_following{i}'))
+
+        self.client = Client()
+
+    def testView(self):
+        """Тестирует страницу просмотра подписок."""
+        url_follow_index = reverse('follow_index')
+
+        unvisible_posts = self.data[-1][1]
+        for author, visible_posts, followers in self.data:
+            for follower in followers:
+                self.client.force_login(follower)
+                response = self.client.get(url_follow_index)
+
+                # проверяем, что у зарегистрированного пользователя на странице подписок видны нужные посты
+                for post in visible_posts:
+                    self.assertContains(response, post.text)
+                # и не видны ненужные
+                for post in unvisible_posts:
+                    self.assertNotContains(response, post.text)
+            unvisible_posts = visible_posts
+
+        # создаем новый пост и проверяем, что он появился на страницах только у подписчиков
+        new_post = Post.objects.create(author=self.data[0][0], text='some new text')
+        for follower in self.data[0][2]:
+            self.client.force_login(follower)
+            response = self.client.get(url_follow_index)
+            self.assertContains(response, new_post.text)
+
+        for non_follower in self.non_following:
+            self.client.force_login(non_follower)
+            response = self.client.get(url_follow_index)
+            self.assertNotContains(response, new_post.text)
+
+
+    def testCreate(self):
+        """Тестирует создание подписок."""
+        user = self.non_following.pop()
+        author = self.data[0][0]
+
+        # авторизованный пользователь может подписываться на других пользователей
+        self.client.force_login(user)
+        url_follow = reverse('profile_follow', args=[author.username])
+        response = self.client.get(url_follow)
+        follows = Follow.objects.filter(user=user, author=author)
+
+        self.assertRedirects(response, reverse('profile', args=[author.username]))
+        self.assertEqual(follows.count(), 1)
+
+        # неавторизованный пользователь не может ни на кого подписаться - он перенаправляется на страницу авторизации
+        self.client.logout()
+        response = self.client.get(url_follow)
+        expected_url = f'{reverse("login")}?next={url_follow}'
+
+        self.assertRedirects(response, expected_url)
+
+    def testDelete(self):
+        """Тестирует удаление подписки."""
+
+        # авторизованный пользователь может отписаться от автора
+        user = self.data[0][2].pop()
+        author = self.data[0][0]
+
+        self.client.force_login(user)
+        url_unfollow = reverse('profile_unfollow', args=[author.username])
+        response = self.client.get(url_unfollow)
+
+        # после отписки из базы данных исчез объект Follow
+        self.assertFalse(Follow.objects.filter(user=user, author=author).exists())
+
+        # а на странице подписок исчезли посты автора, от которого мы отписались
+        for post in self.data[0][1]:
+            response = self.client.get(reverse('follow_index'))
+            self.assertNotContains(response, post.text)
+
+        # неавторизованных пользователь не может ни от кого отписаться
+        self.client.logout()
+        response = self.client.get(url_unfollow)
+        # он перенаправляется на страницу авторизации
+        expected_url = f'{reverse("login")}?next={url_unfollow}'
+        self.assertRedirects(response, expected_url)
