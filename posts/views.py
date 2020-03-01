@@ -1,6 +1,5 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.paginator import Paginator
 from django.db.models import Count
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
@@ -78,10 +77,10 @@ class PostUpdate(LoginRequiredMixin, UpdateView):
 
 
 class PostDelete(LoginRequiredMixin, DeleteView):
-    """Контроллер удаления поста."""
+    """Контроллер удаления поста. """
     model = Post
     pk_url_kwarg = 'post_id'
-    http_method_names = ['post',]
+    http_method_names = ['post']
 
     def delete(self, request, *args, **kwargs):
         post = self.get_object()
@@ -135,6 +134,7 @@ class PostView(TemplateView):
 
 
 class CommentCreate(LoginRequiredMixin, CreateView):
+    """Контроллер для создания комментария. """
     http_method_names = ['post']
     form_class = CommentForm
 
@@ -145,7 +145,6 @@ class CommentCreate(LoginRequiredMixin, CreateView):
 
     def get_success_url(self):
         return reverse('post', kwargs=self.kwargs)
-
 
 
 @login_required
