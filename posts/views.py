@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count
 from django.shortcuts import render, get_object_or_404, redirect
@@ -6,7 +7,7 @@ from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, UpdateView, DeleteView
 from django.views.generic.base import TemplateView
 from django.views.generic.list import ListView
-from django.contrib.auth.decorators import login_required
+
 from .forms import PostForm, CommentForm
 from .models import Post, Group, Follow
 
@@ -100,14 +101,12 @@ class ProfileView(ListView):
     def get_queryset(self):
         author = get_user_profile(self.kwargs['username'])
         self.kwargs['author'] = author
-
         return author.posts.all()
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(object_list=object_list, **kwargs)
         context['author'] = self.kwargs['author']
         context['following'] = check_following(self.request.user, context['author'])
-
         return context
 
 
@@ -163,10 +162,12 @@ def profile_unfollow(request, username):
 
 
 def page_not_found(request, exception):
+    """Страница ошибки при обращении к несуществующему адресу."""
     return render(request, "misc/404.html", {"path": request.path}, status=404)
 
 
 def server_error(request):
+    """Страница, выводимая при возникновении ошибки на сервере."""
     return render(request, "misc/500.html", status=500)
 
 
