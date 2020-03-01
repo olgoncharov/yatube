@@ -22,4 +22,9 @@
       </li>
     </ul>
   </div>
+  {% if following %}
+  <a href="{% url 'profile_unfollow' author.username %}" class="btn btn-primary btn-block btn-sm mt-3" role="button" aria-pressed="true">Отписаться</a>
+  {% else %}
+  <a href="{% url 'profile_follow' author.username %}" class="btn btn-primary btn-block btn-sm mt-3" role="button" aria-pressed="true">Подписаться</a>
+  {% endif %}
 </div>

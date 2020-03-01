@@ -30,6 +30,7 @@ class Post(models.Model):
     def __str__(self):
         return self.text
 
+
 class Comment(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments', verbose_name='Публикация')
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments', verbose_name='Автор')
@@ -38,3 +39,8 @@ class Comment(models.Model):
 
     def __str__(self):
         return f'@{self.author.username} ({self.created:%Y-%m-%d %H:%M}: {self.text}'
+
+
+class Follow(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followings')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followers')

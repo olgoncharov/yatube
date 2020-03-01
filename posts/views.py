@@ -7,9 +7,9 @@ from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, UpdateView, DeleteView
 from django.views.generic.base import TemplateView
 from django.views.generic.list import ListView
-
+from django.contrib.auth.decorators import login_required
 from .forms import PostForm, CommentForm
-from .models import Post, Group
+from .models import Post, Group, Follow
 
 
 User = get_user_model()
@@ -21,6 +21,16 @@ class IndexView(ListView):
     ordering = '-pub_date'
     paginate_by = 10
     template_name = 'index.html'
+
+
+class FollowView(LoginRequiredMixin, ListView):
+    """Страница постов авторов, на которых подписан пользователь."""
+    ordering = '-pub_date'
+    paginate_by = 10
+    template_name = 'follow.html'
+
+    def get_queryset(self):
+        return Post.objects.filter(author__followers__user=self.request.user)
 
 
 class GroupView(ListView):
@@ -96,7 +106,9 @@ class ProfileView(ListView):
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(object_list=object_list, **kwargs)
+        follows = Follow.objects.filter(user=self.request.user, author=self.kwargs['author'])
         context['author'] = self.kwargs['author']
+        context['following'] = (follows.count() > 0)
 
         return context
 
@@ -111,8 +123,10 @@ class PostView(TemplateView):
         post = get_object_or_404(Post, pk=self.kwargs['post_id'])
         comments = post.comments.order_by('created').all()
         new_comment_form = CommentForm()
+        follows = Follow.objects.filter(user=self.request.user, author=author)
 
         context['author'] = author
+        context['following'] = follows.count()
         context['post'] = post
         context['comments'] = comments
         context['new_comment_form'] = new_comment_form
@@ -131,6 +145,24 @@ class CommentCreate(LoginRequiredMixin, CreateView):
 
     def get_success_url(self):
         return reverse('post', kwargs=self.kwargs)
+
+
+
+@login_required
+def profile_follow(request, username):
+    """Контроллер для подписки на автора."""
+    author = get_object_or_404(User, username=username)
+    follow = Follow.objects.create(user=request.user, author=author)
+    return redirect('profile', username=username)
+
+
+@login_required
+def profile_unfollow(request, username):
+    """Контроллер для отписки от автора."""
+    author = get_object_or_404(User, username=username)
+    follow = get_object_or_404(Follow, user=request.user, author=author)
+    follow.delete()
+    return redirect('profile', username=username)
 
 
 def page_not_found(request, exception):
