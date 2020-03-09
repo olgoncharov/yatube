@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.forms',
     'sorl.thumbnail',
 ]
 
@@ -149,3 +150,5 @@ CACHES = {
                 'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
         }
 }
+
+FORM_RENDERER = 'django.forms.renderers.TemplatesSetting'

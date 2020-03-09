@@ -1,0 +1,38 @@
+<div class="col px-0">
+  {% load static %}
+  <div class="pb-3">
+  <img id="img-preview" src="{% if widget.value.url %}{{ widget.value.url }}{% else %}{% static 'img/no_image.png' %}{% endif %}" style="max-width: 400px;" />
+  </div>
+  <div class="input-group mb-3">
+    <div class="custom-file">
+      <input type="{{ widget.type }}" class="custom-file-input" id="inputGroupFile04" aria-describedby="inputGroupFileAddon04" name="{{ widget.name }}" {% include "django/forms/widgets/attrs.html" %}>
+      <label class="custom-file-label" for="inputGroupFile04">Выберите файл</label>
+    </div>
+    {% if not widget.required %}
+    <div class="input-group-append">
+      <div class="input-group-text">
+        <span>
+          <input type="checkbox" aria-label="Очистить" name="{{ widget.checkbox_name }}" id="{{ widget.checkbox_id }}">
+          Очистить
+        </span>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  <script>
+    $('#inputGroupFile04').on('change', function(){
+      //get the file name
+      var fileName = $(this).val();
+      //replace the "Choose a file" label
+      $(this).next('.custom-file-label').html(fileName);
+      //set preview
+      if ($(this)[0].files && $(this)[0].files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          $('#img-preview').attr('src', e.target.result);
+        };
+        reader.readAsDataURL($(this)[0].files[0]);
+      }
+    })
+  </script>
+</div>
