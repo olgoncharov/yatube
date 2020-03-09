@@ -1,12 +1,16 @@
 {% extends "base.html" %}
 {% block title %} Избранное {% endblock %}
 {% block content %}
-{% include "menu.html" with index=False %}
-<h1>Обновления избранных авторов</h1>
-{% for post in page_obj %}
-{% include "post_item.html" with comment_button_able=True %}
-{% endfor %}
-{% if page_obj.has_other_pages %}
-{% include "paginator.html" with items=page_obj paginator=paginator %}
-{% endif %}
+<div class="row">
+  {% include "menu.html" %}
+  <div class="col-9">
+    <h1>Обновления избранных авторов</h1>
+    {% for post in page %}
+    {% include "post_item.html" with comment_button_able=True %}
+    {% endfor %}
+    {% if page.has_other_pages %}
+    {% include "paginator.html" with items=page paginator=paginator %}
+    {% endif %}
+  </div>
+</div>
 {% endblock %}

@@ -1,14 +1,33 @@
-<div class="card mb-3 mt-1 shadow-sm">
-  {% load thumbnail %}
-  {% thumbnail post.image "960x339" crop="center" upscale=True as im %}
-  <img class="card-image" src="{{ im.url }}">
-  {% endthumbnail %}
-  <div class="card-body">
+<div class="row no-gutters border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
+  <div class="col-auto d-none d-lg-block py-3">
+    {% load thumbnail %}
+    {% thumbnail post.image "320x200" as im %}
+    <img class="card-image" src="{{ im.url }}" style="margin:{{ im|margin:"320x200" }}"/>
+    {% empty %}
+    {% load static %}
+    <img class="card-image" src="{% static 'images/no-image.jpg' %}"/>
+    {% endthumbnail %}
+  </div>
+  <div class="col p-3 d-flex flex-column position-static">
+    <div class="d-flex d-lg-none justify-content-center">
+      {% load thumbnail %}
+      {% thumbnail post.image "550x340" as im %}
+      <img class="card-image" src="{{ im.url }}"/>
+      {% endthumbnail %}
+    </div>
     <p class="card-text">
-      <a href="{% url 'profile' post.author.username %}"><strong class="d-block text-gray-dark">@{{ post.author }}</strong></a>
-    <p>{{ post.text|linebreaksbr }}</p>
+      <div class="d-flex justify-content-between align-items-center">
+        <a href="{% url 'profile' post.author.username %}"><strong class="d-block text-gray-dark">@{{ post.author }}</strong></a>
+        {% if not post.group is None %}
+        <span>
+          <i class="fa fa-tag text-muted" ></i>
+          <a href="{% url 'group-posts' post.group.slug %}" class="btn btn-light btn-sm" role="button">{{ post.group }}</a>
+        </span>
+        {% endif %}
+      </div>
+      <p>{{ post.text|linebreaksbr }}</p>
     </p>
-    <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex justify-content-between align-items-end h-100">
       <div class="btn-group ">
         {% if comment_button_able %}
         <a class="btn btn-sm text-muted" href="{% url 'post' post.author.username post.pk %}" role="button">Добавить комментарий</a>
@@ -17,7 +36,10 @@
         <a class="btn btn-sm text-muted" href="{% url 'post_edit' post.author.username post.pk %}" role="button">Редактировать</a>
         {% endif %}
       </div>
-      <small class="text-muted">{{ post.pub_date|date:"d M Y" }}</small>
+      <span>
+        <i class="far fa-calendar-alt"></i>
+        <small class="text-muted">{{ post.pub_date|date:"d M Y" }}</small>
+      </span>
     </div>
   </div>
 </div>

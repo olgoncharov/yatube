@@ -1,15 +1,22 @@
 {% extends "base.html" %}
 {% block title %} Последние обновления {% endblock %}
 {% block content %}
-{% include "menu.html" with index=True %}
-<h1>Последние обновления на сайте</h1>
-{% load cache %}
-{% cache 20 index_page page_obj.number%}
-{% for post in page_obj %}
-{% include "post_item.html" with comment_button_able=True %}
-{% endfor %}
-{% if page_obj.has_other_pages %}
-{% include "paginator.html" with items=page_obj paginator=paginator %}
-{% endif %}
-{% endcache %}
+<div class="row">
+  {% include "menu.html" %}
+  <div class="col py-3">
+    <h1>Последние обновления на сайте</h1>
+    {% load cache %}
+    {% cache 20 index_page page.number%}
+    {% if page.has_other_pages %}
+    {% include "paginator.html" with items=page paginator=paginator %}
+    {% endif %}
+    {% for post in page %}
+    {% include "post_item.html" with comment_button_able=True %}
+    {% endfor %}
+    {% if page.has_other_pages %}
+    {% include "paginator.html" with items=page paginator=paginator %}
+    {% endif %}
+    {% endcache %}
+  </div>
+</div>
 {% endblock %}

@@ -20,17 +20,17 @@ class TestPosts(TestCase):
         self.client = Client()
 
         # пользователь, от имени которого будут создаваться и редактироваться посты
-        self.author = User.objects.create(
+        self.author = User.objects.create_user(
             username='alesha_popovich',
             first_name='Алёша',
             last_name='Попович',
-            email='alex@popov.ru'
+            email='alex@popov.ru',
+            password='bogatyr'
         )
-        self.author.set_password('bogatyr')
         self.author.save()
 
         # пользователь, от имени которого будет тестироваться редактирование чужих постов
-        self.not_author = User.objects.create(
+        self.not_author = User.objects.create_user(
             username='tugarin',
             first_name='Тугарин',
             last_name='Змей',
@@ -38,8 +38,8 @@ class TestPosts(TestCase):
         )
 
         # текст поста при создании
-        self.post_text = 'А и сильные, могучие богатыри на славной Руси. Не скакать врагам по нашей земле,' \
-                         'не топтать их коням землю Русскую, не затмить им солнце наше красное.'
+        self.post_text = ('А и сильные, могучие богатыри на славной Руси. Не скакать врагам по нашей земле,'
+                         'не топтать их коням землю Русскую, не затмить им солнце наше красное.')
 
         # текст поста после редактирования
         self.post_text_update = 'Век стоит Русь - не шатается. И века простоит - не шелохнётся!'
@@ -59,7 +59,7 @@ class TestPosts(TestCase):
         # неграфический файл
         self.non_image_file = SimpleUploadedFile('non_image.txt', b'some text')
 
-    def testCreation(self):
+    def test_create(self):
         """Тестирует поведение при создании нового поста."""
         new_post_url = reverse('new_post')
         Post.objects.all().delete()
@@ -93,9 +93,6 @@ class TestPosts(TestCase):
         ]
         for url in url_list:
             response = self.client.get(url)
-            self.assertIn('page_obj', response.context)
-            self.assertEqual(len(response.context['page_obj']), 1)
-            self.assertEqual(response.context['page_obj'][0], posts[0])
             self.assertContains(response, self.post_text)
 
         # убедимся, что и на странице просмотра поста он содержится
@@ -118,7 +115,7 @@ class TestPosts(TestCase):
         })
         self.assertRedirects(response, expected_url)
 
-    def testEdit(self):
+    def test_edit(self):
         """Тестирует поведение при редактировании существующего поста."""
         test_post, created = Post.objects.get_or_create(author=self.author, text=self.post_text, group=self.group)
         post_edit_url = reverse('post_edit', args=[self.author.username, test_post.pk])
@@ -154,7 +151,7 @@ class TestPosts(TestCase):
 
         # а со страницы сообщества пост исчез
         response = self.client.get(reverse('group-posts', args=[self.group.slug]))
-        self.assertEqual(len(response.context['page_obj']), 0)
+        self.assertEqual(len(response.context['page']), 0)
         self.assertNotContains(response, self.post_text_update)
 
         self.client.logout()
@@ -170,7 +167,7 @@ class TestPosts(TestCase):
         response = self.client.get(post_edit_url)
         self.assertRedirects(response, post_view_url)
 
-    def testDelete(self):
+    def test_delete(self):
         """Тестирует поведение при удалении поста."""
         test_post, created = Post.objects.get_or_create(author=self.author, text=self.post_text, group=self.group)
         delete_url = reverse('post_delete', args=[self.author.username, test_post.pk])
@@ -197,7 +194,7 @@ class TestPosts(TestCase):
         expected_url = reverse('profile', args=[self.author.username])
         self.assertRedirects(response, expected_url)
 
-    def testError404(self):
+    def test_error_404(self):
         """Тестирует поведение при обращении к странице несуществующего поста."""
         Post.objects.all().delete()
 
@@ -205,7 +202,7 @@ class TestPosts(TestCase):
         self.assertEqual(response.status_code, 404)
         self.assertTemplateUsed(response, 'misc/404.html')
 
-    def testImages(self):
+    def test_images(self):
         """Тестирует работу с иллюстрациями к постам."""
         Post.objects.all().delete()
         self.client.force_login(self.author)
@@ -263,7 +260,7 @@ class TestCache(TestCase):
 
         self.index_url = reverse('index')
 
-    def testIndex(self):
+    def test_index(self):
         """Тестирует кэширование главной страницы."""
         response = self.client.get(self.index_url)
 
@@ -287,14 +284,14 @@ class TestComments(TestCase):
     """Набор тестов для проверки работы комментариев."""
 
     def setUp(self):
-        self.author = User.objects.create(username='somebody')
-        self.user = User.objects.create(username='another_one')
+        self.author = User.objects.create_user('somebody')
+        self.user = User.objects.create_user('another_one')
         self.post = Post.objects.create(author=self.author, text='spartak - champion')
         self.comment_text = 'it is not true'
         self.url_add_comment = reverse('add_comment', args=[self.author.username, self.post.pk])
         self.client = Client()
 
-    def testCreate(self):
+    def test_create(self):
         """Тестирует создание комментариев к посту."""
 
         # авторизованный пользователь может добавлять комментарии к посту
@@ -331,7 +328,7 @@ class TestFollows(TestCase):
         """
         self.data = []
         for i in range(3):
-            author = User.objects.create(username=f'author{i}')
+            author = User.objects.create_user(f'author{i}')
             posts, followers = [], []
 
             for j in range(3):
@@ -340,7 +337,7 @@ class TestFollows(TestCase):
                 posts.append(Post.objects.create(author=author, text=random_text))
 
             for j in range(5):
-                follower = User.objects.create(username=f'follower{i}_{j}')
+                follower = User.objects.create_user(f'follower{i}_{j}')
                 follow = Follow.objects.create(user=follower, author=author)
                 followers.append(follower)
 
@@ -348,11 +345,11 @@ class TestFollows(TestCase):
 
         self.non_following = []
         for i in range(3):
-            self.non_following.append(User.objects.create(username=f'non_following{i}'))
+            self.non_following.append(User.objects.create_user(f'non_following{i}'))
 
         self.client = Client()
 
-    def testView(self):
+    def test_view(self):
         """Тестирует страницу просмотра подписок."""
         url_follow_index = reverse('follow_index')
 
@@ -383,7 +380,7 @@ class TestFollows(TestCase):
             self.assertNotContains(response, new_post.text)
 
 
-    def testCreate(self):
+    def test_create(self):
         """Тестирует создание подписок."""
         user = self.non_following.pop()
         author = self.data[0][0]
@@ -404,7 +401,7 @@ class TestFollows(TestCase):
 
         self.assertRedirects(response, expected_url)
 
-    def testDelete(self):
+    def test_delete(self):
         """Тестирует удаление подписки."""
 
         # авторизованный пользователь может отписаться от автора

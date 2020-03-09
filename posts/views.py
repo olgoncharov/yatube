@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.paginator import Paginator
 from django.db.models import Count
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
@@ -10,7 +11,7 @@ from django.views.generic.list import ListView
 
 from .forms import PostForm, CommentForm
 from .models import Post, Group, Follow
-
+from .utils import get_user_profile, check_following
 
 User = get_user_model()
 
@@ -23,6 +24,21 @@ class IndexView(ListView):
     template_name = 'index.html'
 
 
+def index(request):
+    """
+    Главная страница сойта.
+    Cоздана исключютельно для прохождения тестов. Изначально для этой страницы использовалась
+    class-based-view IndexView. Однако для успешного выполнения тестов требуется реализовать контроллер
+    через function-based-view.
+    """
+    post_list = Post.objects.order_by('-pub_date').all()
+    paginator = Paginator(post_list, 10)
+
+    page_number = request.GET.get('page')
+    page = paginator.get_page(page_number)
+    return render(request, 'index.html', {'page': page, 'paginator': paginator})
+
+
 class FollowView(LoginRequiredMixin, ListView):
     """Страница постов авторов, на которых подписан пользователь."""
     ordering = '-pub_date'
@@ -30,8 +46,26 @@ class FollowView(LoginRequiredMixin, ListView):
     template_name = 'follow.html'
 
     def get_queryset(self):
-        return Post.objects.filter(author__followers__user=self.request.user)
+        return Post.objects.filter(author__following__user=self.request.user)
 
+
+@login_required
+def follow_index(request):
+    """
+    Страница постов авторов, на которых подписан пользователь.
+    Cоздана исключютельно для прохождения тестов. Изначально для этой страницы использовалась
+    class-based-view FollowView. Однако для успешного выполнения тестов требуется реализовать контроллер
+    через function-based-view.
+    """
+    post_list = Post.objects.order_by('-pub_date').filter(author__following__user=request.user)
+    paginator = Paginator(post_list, 10)
+
+    page_number = request.GET.get('page')
+    page = paginator.get_page(page_number)
+    return render(request, 'follow.html', {
+        'page': page,
+        'paginator': paginator,
+    })
 
 class GroupView(ListView):
     """Страница сообщества с постами."""
@@ -46,6 +80,25 @@ class GroupView(ListView):
         context = super().get_context_data(**kwargs)
         context['group'] = get_object_or_404(Group, slug=self.kwargs['slug'])
         return context
+
+
+def group_posts(request, slug):
+    """
+    Страница сообщества с постами.
+    Cоздана исключютельно для прохождения тестов. Изначально для этой страницы использовалась
+    class-based-view GroupView. Однако для успешного выполнения тестов требуется реализовать контроллер
+    через function-based-view.
+    """
+    group = get_object_or_404(Group, slug=slug)
+    paginator = Paginator(group.posts.all().order_by('-pub_date'), 10)
+    page_number = request.GET.get('page')
+    page = paginator.get_page(page_number)
+
+    return render(request, 'group.html', {
+        'group': group,
+        'page': page,
+        'paginator': paginator,
+    })
 
 
 class PostCreate(LoginRequiredMixin, CreateView):
@@ -101,7 +154,7 @@ class ProfileView(ListView):
     def get_queryset(self):
         author = get_user_profile(self.kwargs['username'])
         self.kwargs['author'] = author
-        return author.posts.all()
+        return author.posts.order_by('-pub_date').all()
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(object_list=object_list, **kwargs)
@@ -148,6 +201,13 @@ class CommentCreate(LoginRequiredMixin, CreateView):
 def profile_follow(request, username):
     """Контроллер для подписки на автора."""
     author = get_object_or_404(User, username=username)
+    if author == request.user:
+        # подписаться на самого себя нельзя
+        return redirect('profile', username=username)
+    if Follow.objects.filter(user=request.user, author=author).exists():
+        # подписаться несколько раз на одного пользователя нельзя
+        return redirect('profile', username=username)
+
     follow = Follow.objects.create(user=request.user, author=author)
     return redirect('profile', username=username)
 
@@ -169,20 +229,3 @@ def page_not_found(request, exception):
 def server_error(request):
     """Страница, выводимая при возникновении ошибки на сервере."""
     return render(request, "misc/500.html", status=500)
-
-
-def get_user_profile(username):
-    return get_object_or_404(
-        User.objects.annotate(
-            count_of_posts=Count('posts', distinct=True),
-            count_of_followers=Count('followers', distinct=True),
-            count_of_followings=Count('followings', distinct=True)
-        ),
-        username=username)
-
-
-def check_following(user, author):
-    """Функция проверяет, подписан ли пользователь на автора."""
-    if user.is_authenticated:
-        return Follow.objects.filter(user=user, author=author).count() > 0
-    return False

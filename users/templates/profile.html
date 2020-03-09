@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Профиль пользователя {{ author.get_full_name }}{% endblock %}
 {% block content %}
-<main role="main" class="container">
+<main role="main" class="container-fluid">
   <div class="row">
     {% include "profile_statistics.html" %}
-    <div class="col-md-9">
+    <div class="col">
       {% for post in page_obj %}
       {% include "post_item.html" with comment_button_able=True %}
       {% endfor %}

@@ -1,5 +1,5 @@
-<nav class="navbar navbar-light" style="background-color: #e3f2fd;">
-  <a class="navbar-brand" href="/"><span style="color:red">Ya</span>tube</a>
+<nav class="navbar navbar-light sticky-top" style="background-color: #e3f2fd;">
+  <a class="navbar-brand" href="/"><span style="color: red">Ya</span>tube</a>
   <ul class="nav justify-content-end">
     {% if user.is_authenticated %}
     <li class="nav-item dropdown">
@@ -10,14 +10,14 @@
       </div>
     </li>
     <li class="nav-item mt-1">
-      <a href="{% url 'new_post' %}" class="btn btn-outline-primary btn-sm" role="button" aria-pressed="true">Новая запись</a>
+      <a href="{% url 'new_post' %}" class="btn btn-outline-primary btn-sm"><i class="fas fa-feather"></i> Новая запись</a>
     </li>
     {% else %}
     <li class="nav-item">
-      <a href="{% url 'login' %}" class="btn btn-outline-primary btn-sm" role="button" aria-pressed="true">Войти</a>
+      <a href="{% url 'login' %}" class="btn btn-primary btn-sm" role="button" aria-pressed="true">Войти</a>
     </li>
     <li class="nav-item ml-2">
-      <a href="{% url 'signup' %}" class="btn btn-outline-secondary btn-sm" role="button" aria-pressed="true">Регистрация</a>
+      <a href="{% url 'signup' %}" class="btn btn-outline-primary btn-sm" role="button" aria-pressed="true">Регистрация</a>
     </li>
     {% endif %}
   </ul>
