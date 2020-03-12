@@ -5,7 +5,7 @@
     <img class="card-image" src="{{ im.url }}" style="margin:{{ im|margin:"320x200" }}"/>
     {% empty %}
     {% load static %}
-    <img class="card-image" src="{% static 'images/no-image.jpg' %}"/>
+    <img class="card-image" src="{% static 'img/no_image.png' %}"/>
     {% endthumbnail %}
   </div>
   <div class="col p-3 d-flex flex-column position-static">
