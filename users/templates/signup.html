@@ -7,29 +7,34 @@
     <div class="card">
       <div class="card-header">Зарегистрироваться</div>
       <div class="card-body">
-        {% for error in form.errors %}
-        <div class="alert alert-danger" role="alert">
-          {{ error }}
-        </div>
-        {% endfor %}
-        <form method="post" action="{% url 'signup' %}">
+        <form method="post" action="{% url 'signup' %}" enctype="multipart/form-data">
           {% csrf_token %}
-          {% for field in form %}
-          <div class="form-group row" aria-required={% if field.required %}"true"{% else %}"false"{% endif %}>
-          <label for="{{ field.id_for_label }}" class="col-md-4 col-form-label text-md-right">{{ field.label }}{% if field.required %}<span class="required">*</span>{% endif %}</label>
-          <div class="col-md-6">
-            {{ field|addClass:"form-control" }}
-            {% if field.help_text %}
-            <small id="{{ field.id_for_label }}-help" class="form-text text-muted">{{ field.help_text|safe }}</small>
-            {% endif %}
-          </div>
+          {% for form in forms %}
+            {% for field in form %}
+            <div class="form-group row">
+              <label for="{{ field.id_for_label }}" class="col-md-4 col-form-label text-md-right">{{ field.label }}{% if field.required %}<span class="required">*</span>{% endif %}</label>
+              <div class="col-md-6">
+                {% if field.errors %}
+                {{ field|addClass:"form-control is-invalid" }}
+                <div class="invalid-feedback">
+                  {{ field.errors }}
+                </div>
+                {% else %}
+                {{ field|addClass:"form-control" }}
+                {% endif %}
+                {% if field.help_text %}
+                <small id="{{ field.id_for_label }}-help" class="form-text text-muted">{{ field.help_text|safe }}</small>
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %}
           {% endfor %}
           <div class="col-md-6 offset-md-4">
             <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
           </div>
         </form>
-      </div> <!-- card body -->
-    </div> <!-- card -->
-  </div> <!-- col -->
-</div> <!-- row -->
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
