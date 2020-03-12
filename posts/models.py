@@ -8,6 +8,7 @@ class Group(models.Model):
     title = models.CharField(max_length=200, verbose_name='Наименование')
     slug = models.SlugField(unique=True, verbose_name='Адрес', help_text='Уникальный адрес группы, часть URL')
     description = models.TextField(verbose_name='Описание')
+    image = models.ImageField(upload_to='groups', blank=True, null=True, verbose_name='Картинка')
 
     def __str__(self):
         return self.title

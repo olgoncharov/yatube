@@ -82,6 +82,13 @@ class GroupView(ListView):
         return context
 
 
+class GroupListView(ListView):
+    """Страница со списком сообществ."""
+    model = Group
+    template_name = 'group_list.html'
+    paginate_by = 30
+
+
 def group_posts(request, slug):
     """
     Страница сообщества с постами.

@@ -13,4 +13,5 @@ urlpatterns = [
     path('<username>/<int:post_id>/edit/', views.PostUpdate.as_view(), name='post_edit'),
     path('<username>/<int:post_id>/delete/', views.PostDelete.as_view(), name='post_delete'),
     path('<username>/<int:post_id>/comment/', views.CommentCreate.as_view(), name='add_comment'),
+    path('groups/', views.GroupListView.as_view(), name='groups')
 ]
