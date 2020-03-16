@@ -3,22 +3,22 @@
 {% block content %}
 <div class="row">
   {% include "menu.html" %}
-  <div class="col py-3">
+  <div class="col-9 py-3">
     <h1>Сообщества</h1>
     {% if page_obj.has_other_pages %}
     {% include "paginator.html" with items=page_obj paginator=paginator %}
     {% endif %}
     {% load thumbnail %}
     {% for group in page_obj %}
-    {% if forloop.counter0|divisibleby:"3" %}<div class="row py-3">{% endif %}
-      <div class="col-4">
-        <div class="media">
+    {% if forloop.counter0|divisibleby:"3" %}<div class="row">{% endif %}
+      <div class="col">
+        <div class="media py-3">
           {% thumbnail group.image "64x64" as im %}
-          <img src="{{ im.url }}" class="mr-3" style="margin:{{ im|margin:"64x64" }}"/>
+          <a href="{% url 'group-posts' group.slug %}"><img src="{{ im.url }}" class="mr-3" style="margin:{{ im|margin:"64x64" }}"/></a>
           {% endthumbnail %}
           <div class="media-body">
-            <a href="{% url 'group-posts' group.slug %}"><h5 class="mt-0">{{ group.title }}</h5></a>
-            <p class="h6 text-muted">{{ group.description }}</p>
+            <a href="{% url 'group-posts' group.slug %}"><h6 class="mt-0">{{ group.title }}</h6></a>
+            <p class="text-muted" style="line-height: 120%">{{ group.description }}</p>
           </div>
         </div>
       </div>
