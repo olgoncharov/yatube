@@ -3,7 +3,7 @@
 {% block content %}
 <div class="row">
   {% include "menu.html" %}
-  <div class="col py-3">
+  <div class="col-9 py-3">
     <h1>Последние обновления на сайте</h1>
     {% load cache %}
     {% cache 20 index_page page.number%}

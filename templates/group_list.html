@@ -11,14 +11,14 @@
     {% load thumbnail %}
     {% for group in page_obj %}
     {% if forloop.counter0|divisibleby:"3" %}<div class="row py-3">{% endif %}
-      <div class="col">
+      <div class="col-4">
         <div class="media">
-          {% thumbnail group.image "100x100" as im %}
-          <img src="{{ im.url }}" class="mr-3" style="margin:{{ im|margin:"100x100" }}"/>
+          {% thumbnail group.image "64x64" as im %}
+          <img src="{{ im.url }}" class="mr-3" style="margin:{{ im|margin:"64x64" }}"/>
           {% endthumbnail %}
           <div class="media-body">
-            <a class="stretched-link" href="{% url 'group-posts' group.slug %}"><h5 class="mt-0">{{ group.title }}</h5></a>
-            <p class="text-muted">{{ group.description }}</p>
+            <a href="{% url 'group-posts' group.slug %}"><h5 class="mt-0">{{ group.title }}</h5></a>
+            <p class="h6 text-muted">{{ group.description }}</p>
           </div>
         </div>
       </div>
