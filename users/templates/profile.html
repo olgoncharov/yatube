@@ -4,7 +4,8 @@
 <main role="main" class="container-fluid">
   <div class="row">
     {% include "profile_statistics.html" %}
-    <div class="col">
+    <div class="col-9 py-3">
+      <h2>Записи пользователя</h2>
       {% for post in page_obj %}
       {% include "post_item.html" with comment_button_able=True %}
       {% endfor %}
