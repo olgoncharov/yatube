@@ -2,7 +2,7 @@
   <div class="col-auto d-none d-lg-block py-3">
     {% load thumbnail %}
     {% thumbnail post.image "320x200" as im %}
-    <a href="{% url 'post' post.author.username post.pk %}"><img class="card-image" src="{{ im.url }}" style="margin:{{ im|margin:"320x200" }}"/></a>
+    <a href="{% url 'post' post.author.username post.pk %}"><img class="card-image float" src="{{ im.url }}" style="margin:{{ im|margin:"320x200" }}"/></a>
     {% empty %}
     {% load static %}
     <img class="card-image" src="{% static 'img/no_image.png' %}"/>
@@ -19,14 +19,12 @@
       <div class="d-flex justify-content-between align-items-center pb-2">
         <a href="{% url 'profile' post.author.username %}"><strong class="d-block text-gray-dark">@{{ post.author }}</strong></a>
         {% if not post.group is None %}
-        <a class="group-link" href="{% url 'group-posts' post.group.slug %}"><i class="fa fa-tag text-muted" ></i> {{ post.group }}</a>
+        <a class="text-reset" href="{% url 'group-posts' post.group.slug %}"><i class="fa fa-tag text-muted" ></i> {{ post.group }}</a>
         {% endif %}
       </div>
-      <div class="position-relative">
-        <p class="text-justify">{{ post.text|truncatechars:'300' |linebreaksbr }}<a class="stretched-link" href="{% url 'post' post.author.username post.pk %}"></a></p>
-      </div>
+      <p class="text-justify">{{ post.text|truncatechars:'300' |linebreaksbr }}{% if post.text|length > 300 %}<a href="{% url 'post' post.author.username post.pk %}">читать полностью</a>{% endif %}</p>
     </div>
-    <div class="d-flex justify-content-between align-items-end pt-3">
+    <div class="d-flex justify-content-between align-items-center pt-3">
       <div class="btn-group ">
         {% if comment_button_able %}
         <a class="btn btn-sm text-muted" href="{% url 'post' post.author.username post.pk %}" role="button">Добавить комментарий</a>
