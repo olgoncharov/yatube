@@ -1,13 +1,13 @@
 {% extends "base.html" %}
-{% block title %}Зарегистрироваться{% endblock %}
+{% block title %}{% if user.is_authenticated %}Редактирование профиля{% else %}Зарегистрироваться{% endif %}{% endblock %}
 {% block content %}
 {% load user_filters %}
 <div class="row justify-content-center">
   <div class="col-md-8 p-5">
     <div class="card">
-      <div class="card-header">Зарегистрироваться</div>
+      <div class="card-header">{% if user.is_authenticated %}Редактировать профиль{% else %}Зарегистрироваться{% endif %}</div>
       <div class="card-body">
-        <form method="post" action="{% url 'signup' %}" enctype="multipart/form-data">
+        <form method="post" action="{% if not user.is_authenticated %}{% url 'signup' %}{% else %}{% url 'edit_profile' user.username%}{% endif %}" enctype="multipart/form-data">
           {% csrf_token %}
           {% for form in forms %}
             {% for field in form %}
@@ -30,7 +30,7 @@
             {% endfor %}
           {% endfor %}
           <div class="col-md-6 offset-md-4">
-            <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+            <button type="submit" class="btn btn-primary">{% if user.is_authenticated %}Сохранить{% else %}Зарегистрироваться{% endif %}</button>
           </div>
         </form>
       </div>

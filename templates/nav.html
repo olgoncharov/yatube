@@ -5,6 +5,7 @@
     <li class="nav-item dropdown">
       <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Пользователь: {{ user.username }}</a>
       <div class="dropdown-menu">
+        <a class="dropdown-item" href="{% url 'edit_profile' user.username%}">Редактировать профиль</a>
         <a class="dropdown-item" href="{% url 'password_change' %}">Изменить пароль</a>
         <a class="dropdown-item" href="{% url 'logout' %}">Выйти</a>
       </div>
