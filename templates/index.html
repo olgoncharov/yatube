@@ -6,15 +6,15 @@
   <div class="col-9 py-3">
     <h1>Последние обновления на сайте</h1>
     {% load cache %}
-    {% cache 20 index_page page.number%}
-    {% if page.has_other_pages %}
-    {% include "paginator.html" with items=page paginator=paginator %}
+    {% cache 20 index_page page_obj.number%}
+    {% if page_obj.has_other_pages %}
+    {% include "paginator.html" with items=page_obj paginator=paginator %}
     {% endif %}
-    {% for post in page %}
+    {% for post in page_obj %}
     {% include "post_item.html" with comment_button_able=True %}
     {% endfor %}
-    {% if page.has_other_pages %}
-    {% include "paginator.html" with items=page paginator=paginator %}
+    {% if page_obj.has_other_pages %}
+    {% include "paginator.html" with items=page_obj paginator=paginator %}
     {% endif %}
     {% endcache %}
   </div>

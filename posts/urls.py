@@ -2,10 +2,10 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('', views.index, name='index'),
-    path('follow/', views.follow_index, name='follow_index'),
+    path('', views.IndexView.as_view(), name='index'),
+    path('follow/', views.FollowView.as_view(), name='follow_index'),
     path('new/', views.PostCreate.as_view(), name='new_post'),
-    path('group/<slug:slug>/', views.group_posts, name='group-posts'),
+    path('group/<slug:slug>/', views.GroupView.as_view(), name='group-posts'),
     path('user/<username>/', views.ProfileView.as_view(), name='profile'),
     path('<username>/follow/', views.profile_follow, name='profile_follow'),
     path('<username>/unfollow/', views.profile_unfollow, name='profile_unfollow'),

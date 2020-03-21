@@ -24,21 +24,6 @@ class IndexView(ListView):
     template_name = 'index.html'
 
 
-def index(request):
-    """
-    Главная страница сойта.
-    Cоздана исключютельно для прохождения тестов. Изначально для этой страницы использовалась
-    class-based-view IndexView. Однако для успешного выполнения тестов требуется реализовать контроллер
-    через function-based-view.
-    """
-    post_list = Post.objects.order_by('-pub_date').all()
-    paginator = Paginator(post_list, 10)
-
-    page_number = request.GET.get('page')
-    page = paginator.get_page(page_number)
-    return render(request, 'index.html', {'page': page, 'paginator': paginator})
-
-
 class FollowView(LoginRequiredMixin, ListView):
     """Страница постов авторов, на которых подписан пользователь."""
     ordering = '-pub_date'
@@ -48,24 +33,6 @@ class FollowView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         return Post.objects.filter(author__following__user=self.request.user)
 
-
-@login_required
-def follow_index(request):
-    """
-    Страница постов авторов, на которых подписан пользователь.
-    Cоздана исключютельно для прохождения тестов. Изначально для этой страницы использовалась
-    class-based-view FollowView. Однако для успешного выполнения тестов требуется реализовать контроллер
-    через function-based-view.
-    """
-    post_list = Post.objects.order_by('-pub_date').filter(author__following__user=request.user)
-    paginator = Paginator(post_list, 10)
-
-    page_number = request.GET.get('page')
-    page = paginator.get_page(page_number)
-    return render(request, 'follow.html', {
-        'page': page,
-        'paginator': paginator,
-    })
 
 class GroupView(ListView):
     """Страница сообщества с постами."""
@@ -87,25 +54,6 @@ class GroupListView(ListView):
     model = Group
     template_name = 'group_list.html'
     paginate_by = 30
-
-
-def group_posts(request, slug):
-    """
-    Страница сообщества с постами.
-    Cоздана исключютельно для прохождения тестов. Изначально для этой страницы использовалась
-    class-based-view GroupView. Однако для успешного выполнения тестов требуется реализовать контроллер
-    через function-based-view.
-    """
-    group = get_object_or_404(Group, slug=slug)
-    paginator = Paginator(group.posts.all().order_by('-pub_date'), 10)
-    page_number = request.GET.get('page')
-    page = paginator.get_page(page_number)
-
-    return render(request, 'group.html', {
-        'group': group,
-        'page': page,
-        'paginator': paginator,
-    })
 
 
 class PostCreate(LoginRequiredMixin, CreateView):
