@@ -43,7 +43,10 @@ def edit_profile(request, username):
         return redirect('profile', username)
 
     user_form = ExistingUserForm(instance=user)
-    profile_form = UserProfileForm(instance=user.profile)
+    try:
+        profile_form = UserProfileForm(instance=user.profile)
+    except User.profile.RelatedObjectDoesNotExist:
+        profile_form = UserProfileForm()
 
     context = {'forms': [user_form, profile_form]}
     return render(request, 'user_edit.html', context)
