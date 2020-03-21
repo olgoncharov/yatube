@@ -30,10 +30,17 @@ def edit_profile(request, username):
     user = get_object_or_404(User, username=username)
     if request.method == 'POST':
         user_form = ExistingUserForm(request.POST, instance=user)
-        profile_form = UserProfileForm(request.POST, instance=user.profile, files=request.FILES or None)
+        try:
+            profile_form = UserProfileForm(request.POST, instance=user.profile, files=request.FILES or None)
+        except User.profile.RelatedObjectDoesNotExist:
+            profile_form = UserProfileForm(request.POST, files=request.FILES or None)
+
         if user_form.is_valid() and profile_form.is_valid():
             user_form.save()
-            profile_form.save()
+            user_profile = profile_form.save(commit=False)
+            user_profile.user = user
+            user_profile.save()
+
             return redirect('profile', username)
 
         context = {'forms': [user_form, profile_form]}
