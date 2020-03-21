@@ -1,8 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse, reverse_lazy
-from django.views.generic import CreateView, TemplateView
-from django.core.mail import send_mail
-from django.contrib.auth.forms import UserChangeForm
+from django.urls import reverse
 
 from .forms import NewUserForm, ExistingUserForm, UserProfileForm
 from .models import User
