@@ -6,6 +6,9 @@
 <li class="media border">
   {% thumbnail item.author.profile.foto "64x64" as im %}
   <img src="{{ im.url }}" class="mr-3 my-3 ml-2 rounded-circle"/>
+  {% empty %}
+  {% load static %}
+  <img src="{% static 'img/noavatar.png' %}" class="mr-3 my-3 ml-2 rounded-circle bg-light border" style="width: 64px; height: 64px"/>
   {% endthumbnail %}
   <div class="media-body">
     <div class="d-flex justify-content-left align-items-end">
