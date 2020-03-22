@@ -6,6 +6,7 @@ from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, UpdateView, DeleteView
 from django.views.generic.base import TemplateView
 from django.views.generic.list import ListView
+from django.db.models import Count
 
 from .forms import PostForm, CommentForm
 from .models import Post, Group, Follow
@@ -21,7 +22,12 @@ class IndexView(ListView):
     template_name = 'index.html'
 
     def get_queryset(self):
-        return Post.objects.select_related('author', 'group').order_by('-pub_date').all()
+        return (
+            Post.objects.select_related('author', 'group')
+            .order_by('-pub_date')
+            .annotate(comment_count=Count('comments'))
+            .all()
+        )
 
 
 class FollowView(LoginRequiredMixin, ListView):
@@ -33,6 +39,7 @@ class FollowView(LoginRequiredMixin, ListView):
         return (
             Post.objects.select_related('author', 'group')
             .order_by('-pub_date')
+            .annotate(comment_count=Count('comments'))
             .filter(author__following__user=self.request.user)
         )
 
@@ -44,7 +51,12 @@ class GroupView(ListView):
 
     def get_queryset(self):
         group = get_object_or_404(Group, slug=self.kwargs['slug'])
-        return group.posts.select_related('author', 'group').order_by('-pub_date').all()
+        return (
+            group.posts.select_related('author', 'group')
+            .order_by('-pub_date')
+            .annotate(comment_count=Count('comments'))
+            .all()
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -112,7 +124,12 @@ class ProfileView(ListView):
     def get_queryset(self):
         author = get_user_profile(self.kwargs['username'])
         self.kwargs['author'] = author
-        return author.posts.select_related('author', 'group').order_by('-pub_date').all()
+        return (
+            author.posts.select_related('author', 'group')
+            .order_by('-pub_date')
+            .annotate(comment_count=Count('comments'))
+            .all()
+        )
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(object_list=object_list, **kwargs)
@@ -128,7 +145,7 @@ class PostView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         author = get_user_profile(self.kwargs['username'])
-        post = get_object_or_404(Post, pk=self.kwargs['post_id'])
+        post = get_object_or_404(Post.objects.annotate(comment_count=Count('comments')), pk=self.kwargs['post_id'])
         comments = post.comments.select_related('author', 'author__profile').order_by('created').all()
         new_comment_form = CommentForm()
 
