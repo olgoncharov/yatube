@@ -23,6 +23,9 @@ class IndexView(ListView):
     paginate_by = 10
     template_name = 'index.html'
 
+    def get_queryset(self):
+        return Post.objects.select_related('author', 'group').all()
+
 
 class FollowView(LoginRequiredMixin, ListView):
     """Страница постов авторов, на которых подписан пользователь."""
@@ -31,7 +34,7 @@ class FollowView(LoginRequiredMixin, ListView):
     template_name = 'follow.html'
 
     def get_queryset(self):
-        return Post.objects.filter(author__following__user=self.request.user)
+        return Post.objects.select_related('author', 'group').filter(author__following__user=self.request.user)
 
 
 class GroupView(ListView):
@@ -41,7 +44,7 @@ class GroupView(ListView):
 
     def get_queryset(self):
         group = get_object_or_404(Group, slug=self.kwargs['slug'])
-        return group.posts.order_by('-pub_date').all()
+        return group.posts.select_related('author', 'group').order_by('-pub_date').all()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -109,7 +112,7 @@ class ProfileView(ListView):
     def get_queryset(self):
         author = get_user_profile(self.kwargs['username'])
         self.kwargs['author'] = author
-        return author.posts.order_by('-pub_date').all()
+        return author.posts.select_related('author', 'group').order_by('-pub_date').all()
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(object_list=object_list, **kwargs)
@@ -126,7 +129,7 @@ class PostView(TemplateView):
         context = super().get_context_data(**kwargs)
         author = get_user_profile(self.kwargs['username'])
         post = get_object_or_404(Post, pk=self.kwargs['post_id'])
-        comments = post.comments.order_by('created').all()
+        comments = post.comments.select_related('author', 'author__profile').order_by('created').all()
         new_comment_form = CommentForm()
 
         context['author'] = author

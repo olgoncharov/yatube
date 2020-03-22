@@ -5,8 +5,8 @@
   {% include "menu.html" %}
   <div class="col-9 py-3">
     <h1>Последние обновления на сайте</h1>
-    {% load cache %}
-    {% cache 20 index_page page_obj.number%}
+    <!--{% load cache %}
+    {% cache 20 index_page page_obj.number%} -->
     {% if page_obj.has_other_pages %}
     {% include "paginator.html" with items=page_obj paginator=paginator %}
     {% endif %}
@@ -16,7 +16,7 @@
     {% if page_obj.has_other_pages %}
     {% include "paginator.html" with items=page_obj paginator=paginator %}
     {% endif %}
-    {% endcache %}
+    <!--{% endcache %}-->
   </div>
 </div>
 {% endblock %}
