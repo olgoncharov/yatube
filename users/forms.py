@@ -1,6 +1,7 @@
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.contrib.auth import get_user_model
 from django import forms
+from yatube.widgets import ImageWidget
 from .models import UserProfile
 
 
@@ -28,4 +29,5 @@ class UserProfileForm(forms.ModelForm):
         fields = ('foto', 'birthday', 'sex')
         widgets = {
             'birthday': forms.SelectDateWidget,
+            'foto': ImageWidget(width=200, height=200, role='avatar'),
         }

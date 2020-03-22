@@ -1,24 +1,22 @@
 <div class="col px-0">
   {% load static %}
-  <div class="pb-3">
-  <img id="img-preview" src="{% if widget.value.url %}{{ widget.value.url }}{% else %}{% static 'img/no_image.png' %}{% endif %}" style="max-width: 400px;" />
+  <div class="col px-0 border bg-light" style="width: {{ widget.width }}px; height: {{ widget.height }}px">
+    <img id="img-preview" src="{% if widget.value.url %}{{ widget.value.url }}{% else %}{% if widget.role == 'avatar' %}{% static 'img/noavatar.png' %}{% else %}{% static 'img/empty_image.png' %}{% endif %}{% endif %}" style="max-width: {{ widget.width }}px; max-height: {{ widget.height }}px"/>
   </div>
   <div class="input-group mb-3">
     <div class="custom-file">
       <input type="{{ widget.type }}" class="custom-file-input" id="inputGroupFile04" aria-describedby="inputGroupFileAddon04" name="{{ widget.name }}" {% include "django/forms/widgets/attrs.html" %}>
       <label class="custom-file-label" for="inputGroupFile04">Выберите файл</label>
     </div>
-    {% if not widget.required %}
-    <div class="input-group-append">
-      <div class="input-group-text">
-        <span>
-          <input type="checkbox" aria-label="Очистить" name="{{ widget.checkbox_name }}" id="{{ widget.checkbox_id }}">
-          Очистить
-        </span>
-      </div>
-    </div>
-    {% endif %}
   </div>
+  {% if not widget.required %}
+  <div class="form-check">
+    <input class="form-check-input" type="checkbox" name="{{ widget.checkbox_name }}" id="{{ widget.checkbox_id }}">
+    <label class="form-check-label" for="{{ widget.checkbox_id }}">
+      Очистить изображение
+    </label>
+  </div>
+  {% endif %}
   <script>
     $('#inputGroupFile04').on('change', function(){
       //get the file name
