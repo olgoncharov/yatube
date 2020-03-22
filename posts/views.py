@@ -17,22 +17,24 @@ User = get_user_model()
 
 class IndexView(ListView):
     """Главная страница сайта."""
-    ordering = '-pub_date'
     paginate_by = 10
     template_name = 'index.html'
 
     def get_queryset(self):
-        return Post.objects.select_related('author', 'group').all()
+        return Post.objects.select_related('author', 'group').order_by('-pub_date').all()
 
 
 class FollowView(LoginRequiredMixin, ListView):
     """Страница постов авторов, на которых подписан пользователь."""
-    ordering = '-pub_date'
     paginate_by = 10
     template_name = 'follow.html'
 
     def get_queryset(self):
-        return Post.objects.select_related('author', 'group').filter(author__following__user=self.request.user)
+        return (
+            Post.objects.select_related('author', 'group')
+            .order_by('-pub_date')
+            .filter(author__following__user=self.request.user)
+        )
 
 
 class GroupView(ListView):
