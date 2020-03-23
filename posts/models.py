@@ -51,3 +51,14 @@ class Follow(models.Model):
 
     class Meta:
         unique_together = ('user', 'author')
+
+
+class Reaction(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='reactions', verbose_name='Публикация')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reactions', verbose_name='Пользователь')
+    value = models.SmallIntegerField(
+        choices=[(-1, 'Не нравится'), (1, 'Нравится')],
+        verbose_name='Оценка')
+
+    class Meta:
+        unique_together = ('post', 'user')
