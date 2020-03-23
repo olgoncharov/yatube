@@ -1,17 +1,16 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Count
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, UpdateView, DeleteView
 from django.views.generic.base import TemplateView
 from django.views.generic.list import ListView
-from django.db.models import Count
 
 from .forms import PostForm, CommentForm
 from .models import Post, Group, Follow
 from .utils import get_user_profile, check_following
-
 
 User = get_user_model()
 
@@ -24,7 +23,6 @@ class IndexView(ListView):
     def get_queryset(self):
         return (
             Post.objects.select_related('author', 'group')
-            .order_by('-pub_date')
             .annotate(comment_count=Count('comments'))
             .all()
         )
@@ -38,7 +36,6 @@ class FollowView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         return (
             Post.objects.select_related('author', 'group')
-            .order_by('-pub_date')
             .annotate(comment_count=Count('comments'))
             .filter(author__following__user=self.request.user)
         )
@@ -53,7 +50,6 @@ class GroupView(ListView):
         group = get_object_or_404(Group, slug=self.kwargs['slug'])
         return (
             group.posts.select_related('author', 'group')
-            .order_by('-pub_date')
             .annotate(comment_count=Count('comments'))
             .all()
         )
@@ -126,7 +122,6 @@ class ProfileView(ListView):
         self.kwargs['author'] = author
         return (
             author.posts.select_related('author', 'group')
-            .order_by('-pub_date')
             .annotate(comment_count=Count('comments'))
             .all()
         )
