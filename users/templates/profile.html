@@ -6,11 +6,20 @@
     {% include "profile_statistics.html" %}
     <div class="col-9 py-3">
       <h2>Записи пользователя</h2>
+      {% if page_obj.object_list %}
       {% for post in page_obj %}
       {% include "post_item.html" with comment_button_able=True %}
       {% endfor %}
       {% if page_obj.has_other_pages %}
       {% include "paginator.html" with items=page_obj paginator=paginator %}
+      {% endif %}
+      {% else %}
+      <div class="card-body">
+      <p class="card-text">Здесь пока нет ни одной записи :(</p>
+      {% if user == author %}
+      <p class="card-text"><a href="{% url 'new_post' %}">Создайте</a> свой первый пост</p>
+      {% endif %}
+      </div>
       {% endif %}
     </div>
   </div>

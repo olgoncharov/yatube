@@ -4,11 +4,14 @@
       {% load thumbnail %}
       {% thumbnail author.profile.foto "200x200" as im %}
       <img class="mx-auto d-block" src="{{ im.url }}"/>
+      {% empty %}
+      {% load static %}
+      <img class="mx-auto d-block" src="{% static 'img/noavatar.png' %}" style="width: 200px; height: 200px"/>
       {% endthumbnail %}
-      <div class={% if author.profile.foto %}"h3 pt-3"{% else %}"h3"{% endif %}>
+      <div class={% if author.profile.foto %}"h3 pt-3 text-center"{% else %}"h3 text-center"{% endif %}>
         {{ author.get_full_name }}
       </div>
-      <div class="h4 text-muted">
+      <div class="h4 text-muted text-center">
         @{{ author.username }}
       </div>
     </div>
@@ -26,11 +29,15 @@
       </li>
     </ul>
   </div>
-  {% if not author == user %}
+  {% if user.is_authenticated %}
+  {% if author == user %}
+  <a href="{% url 'edit_profile' user.username%}" class="btn btn-primary btn-block mt-3" role="button" aria-pressed="true"><i class="far fa-edit"></i> Редактировать</a>
+  {% else %}
   {% if following %}
   <a href="{% url 'profile_unfollow' author.username %}" class="btn btn-primary btn-block mt-3" role="button" aria-pressed="true"><i class="fas fa-bell-slash"></i> Отписаться</a>
   {% else %}
   <a href="{% url 'profile_follow' author.username %}" class="btn btn-primary btn-block mt-3" role="button" aria-pressed="true"><i class="fas fa-bell"></i> Подписаться</a>
+  {% endif %}
   {% endif %}
   {% endif %}
 </div>
