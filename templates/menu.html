@@ -1,9 +1,12 @@
-{% if user.is_authenticated %}
 <div class="col-2 d-none d-lg-flex bg-light py-3 border-right align-items-start">
   <div class="btn-group-vertical btn-block">
+    {% if user.is_authenticated %}
+    <a class="btn btn-light text-left" href="{% url 'profile' user.username %}"><i class="fa fa-home"></i> Моя страница</a>
+    {% endif %}
     <a class="btn btn-light text-left" href="{% url 'index' %}"><i class="fa fa-newspaper"></i> Все публикации</a>
-    <a class="btn btn-light text-left" href="{% url 'follow_index' %}"><i class="far fa-star"></i> Избранные авторы</a>
     <a class="btn btn-light text-left" href="{% url 'groups' %}"><i class="fas fa-compress-arrows-alt"></i> Сообщества</a>
+    {% if user.is_authenticated %}
+    <a class="btn btn-light text-left" href="{% url 'follow_index' %}"><i class="far fa-star"></i> Избранные авторы</a>
+    {% endif %}
   </div>
 </div>
-{% endif %}
