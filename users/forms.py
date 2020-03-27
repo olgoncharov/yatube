@@ -16,6 +16,7 @@ class NewUserForm(UserCreationForm):
 
 
 class ExistingUserForm(UserChangeForm):
+    password = None
 
     class Meta(UserChangeForm.Meta):
         model = User
