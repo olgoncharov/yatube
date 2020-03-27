@@ -29,6 +29,6 @@ class UserProfileForm(forms.ModelForm):
         model = UserProfile
         fields = ('foto', 'birthday', 'sex')
         widgets = {
-            'birthday': forms.SelectDateWidget,
+            'birthday': forms.SelectDateWidget(years=[1960 + i for i in range(100)]),
             'foto': ImageWidget(width=200, height=200, role='avatar'),
         }
